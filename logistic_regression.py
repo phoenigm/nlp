@@ -57,16 +57,16 @@ train_reviews = df[~df.name.isin(my_films)]
 normalized_reviews = get_normalized_texts(train_reviews.values)
 vocab = get_vocab(normalized_reviews)
 bag_of_words = get_bag_of_words_vectors(train_reviews.values, normalized_reviews, vocab)
-print(bag_of_words)
+print(bag_of_words, file=open("bag_of_words.txt", "w", encoding="utf-8"))
 
-print("Train")
-regression = LogisticRegression()
+print("*********************Train*********************")
+regression = LogisticRegression(max_iter=300000)
 regression.fit(bag_of_words, train_reviews.label)
 
 test_normalized_reviews = get_normalized_texts(my_reviews.values)
 test_bag_of_words = get_bag_of_words_vectors(my_reviews.values, test_normalized_reviews, vocab)
 
-print("Predict")
+print("*********************Predict*********************")
 predicted = regression.predict(test_bag_of_words)
 
 print('Coefficients: \n', regression.coef_)
@@ -81,23 +81,24 @@ for prediction in predicted:
     k += 1
 
 print("Accuracy: {}".format(true_positives / len(predicted)))
+
 precision_recall_fscore = precision_recall_fscore_support(my_reviews['label'].values, predicted)
 print(f"Precision(-1, 0, 1) = {precision_recall_fscore[0]}")
 print(f"Recall(-1, 0, 1) = {precision_recall_fscore[1]}")
 print(f"Fscore(-1, 0, 1) = {precision_recall_fscore[2]}")
 
-dict_of_negative = dict(zip(vocab, regression.coef_[0]))
-dict_of_neutral = dict(zip(vocab, regression.coef_[1]))
-dict_of_positive = dict(zip(vocab, regression.coef_[2]))
+negative_dict = dict(zip(vocab, regression.coef_[0]))
+neutral_dict = dict(zip(vocab, regression.coef_[1]))
+positive_dict = dict(zip(vocab, regression.coef_[2]))
 
-sorted_negative_dictionary = {k: v for k, v in sorted(dict_of_negative.items(), key=lambda item: item[1], reverse=True)}
-sorted_neutral_dictionary = {k: v for k, v in sorted(dict_of_neutral.items(), key=lambda item: item[1], reverse=True)}
-sorted_positive_dictionary = {k: v for k, v in sorted(dict_of_positive.items(), key=lambda item: item[1], reverse=True)}
+sorted_negative_dict = {k: v for k, v in sorted(negative_dict.items(), key=lambda item: item[1], reverse=True)}
+sorted_neutral_dict = {k: v for k, v in sorted(neutral_dict.items(), key=lambda item: item[1], reverse=True)}
+sorted_positive_dict = {k: v for k, v in sorted(positive_dict.items(), key=lambda item: item[1], reverse=True)}
 
 negative = open("negatives.txt", "w", encoding="utf-8")
 neutral = open("neutrals.txt", "w", encoding="utf-8")
 positive = open("positives.txt", "w", encoding="utf-8")
 
-print(sorted_negative_dictionary, file=negative)
-print(sorted_neutral_dictionary, file=neutral)
-print(sorted_positive_dictionary, file=positive)
+print(sorted_negative_dict, file=negative)
+print(sorted_neutral_dict, file=neutral)
+print(sorted_positive_dict, file=positive)
